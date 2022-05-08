@@ -65,10 +65,6 @@ button b {
   font-size: .7em;
 }
 
-.bright {
-  color: red;
-}
-
 article {
   display: flex;
   flex-flow: row nowrap;

@@ -10,6 +10,16 @@ class KEYBOARD {
         this.array_Btn = [[],[],[],[],[]];
         this.flag = false;
     }
+    DrawKey(key){ let row = document.querySelector(`.row${CURENT_INDEX+1}`)
+        if (/backspace/i.test(key) ) {
+            if (this.array_Btn[CURENT_INDEX].length ) {
+                row.children[this.array_Btn[CURENT_INDEX].length-1].remove();                
+            }
+        }
+        else{ 
+            row.append(this.array_Btn[CURENT_INDEX][this.array_Btn[CURENT_INDEX].length-1]);
+        }
+    }
 }
 var keyEngTab = new KEYBOARD(LANG_ENG,true), 
 keyEng = new KEYBOARD(LANG_ENG,false), 
@@ -44,22 +54,32 @@ let article = document.createElement("article");
 let BTN_Init = document.createElement("button"); BTN_Init.classList.add('init'); BTN_Init.textContent='Initialization';
 BTN_Init.addEventListener("click",initKeyBoard);
 
+
+
 function initKeyBoard(event){ let row;
     row = [...ctrl_shift_key].sort( (x,y) => x[0] - y[0]);
     for ( let i of row ){
         let r = Math.floor(i[0]/10), c = i[0]-r*10, {value, key, keyCode} = i[1][0];
         console.log(`row: ${r}===col:${c}===key:${key}` );
-        if (c===1 ){ array_Btn[r].unshift(value);}
+        if (c===1 ){ array_Btn[r].unshift(value);
+            row = document.querySelector(`.row${r+1}`); row.prepend(value);
+        }
         else {
-            if (c===9) array_Btn[r].push(value);                
-            else array_Btn[r].splice(c,0,value);                
+            if (c===9) {array_Btn[r].push(value);
+                row = document.querySelector(`.row${r+1}`); row.append(value);
+            }
+            else{ array_Btn[r].splice(c,0,value);
+                row = document.querySelector(`.row${r+1}`); 
+                let child = row.children[c]; child.before(value);
+            }
         } 
     }    
     array_Btn.flag = true;
-    array_Btn.forEach( (el0,index) =>{ row = document.querySelector(`.row${index+1}`);
+    /*array_Btn.forEach( (el0,index) =>{ row = document.querySelector(`.row${index+1}`);
         while ( row.firstChild ) row.firstChild.remove();
         el0.forEach( el1 =>{ row.append(el1) })
     })
+    */
     maltyText.removeEventListener("keyup",handleCreateShiftCtrl);
     maltyText.removeEventListener("keydown", handleCreateKeys);    
     if (event) event.preventDefault();
@@ -169,36 +189,38 @@ function handleCreateShiftCtrl(event){
 
 maltyText.addEventListener("keyup",handleCreateShiftCtrl);
 
-function handleCreateKeys(event){ event.preventDefault(); event.stopImmediatePropagation(); event.stopPropagation();
+function handleCreateKeys(event){ 
+    event.preventDefault(); event.stopImmediatePropagation(); event.stopPropagation();
     if (/[a-z]{2,}/i.test(event.key) || /^space$/i.test(event.code)) return;
-    if ( (event.keyCode === 'q'.codePointAt(0)) || (event.keyCode === 'Q'.codePointAt(0)) || (event.keyCode === 'й'.codePointAt(0)) || (event.keyCode === 'Й'.codePointAt(0)) ){
-        if (CURENT_INDEX != 1) {CURENT_INDEX =1;  select = Array.from(document.querySelectorAll('article select')).selectedIndex = CURENT_INDEX;}
-    }
-    else if ( (event.keyCode === 'a'.codePointAt(0)) || (event.keyCode === 'A'.codePointAt(0)) || (event.keyCode === 'ф'.codePointAt(0)) || (event.keyCode === 'Ф'.codePointAt(0)) ){
-        if (CURENT_INDEX != 2) {CURENT_INDEX = 2;  select = Array.from(document.querySelectorAll('article select')).selectedIndex = CURENT_INDEX;}
-    }
-    else if ( (event.keyCode === 'z'.codePointAt(0)) || (event.keyCode === 'Z'.codePointAt(0)) || (event.keyCode === 'я'.codePointAt(0)) || (event.keyCode === 'Я'.codePointAt(0)) ){
-        if (CURENT_INDEX != 3) CURENT_INDEX = 3;  
-    }
-    else if ( (event.keyCode === '`'.codePointAt(0)) || (event.keyCode === '~'.codePointAt(0)) || (event.keyCode === 'Ё'.codePointAt(0)) || (event.keyCode === 'ё'.codePointAt(0)) ){
-        if (CURENT_INDEX != 0) CURENT_INDEX = 0;
-    }
+    if ( /q|й{1}/i.test(event.key))  CURENT_INDEX =1;    
+    else if ( /a|ф{1}/i.test(event.key)) CURENT_INDEX = 2;      
+    else if ( /z|я{1}/i.test(event.key) ) CURENT_INDEX = 3;      
+    else if (/(~|\`|Ё){1}/i.test(event.key)) CURENT_INDEX = 0;    
     document.querySelector('select[name="row"]').selectedIndex = CURENT_INDEX;
-    if (searchTree.has(event.keyCode)) return;       
+    if (searchTree.has(event.keyCode)) return;     
     if (  !event.location && event.shiftKey  ) {        
         temp = array_Btn[CURENT_INDEX][array_Btn[CURENT_INDEX].length-1];
         temp.insertAdjacentHTML("afterbegin",`<b>${event.key}</b>`);
         searchTree.add(event.keyCode);
+        temp.name +=event.key; 
+        temp.value+=event.key;          
+        temp[`${event.keyCode}`]=event.keyCode;
+        getCurrentKeyboard().DrawKey('backspace');
+        array_Btn[CURENT_INDEX].pop();     
+        array_Btn[CURENT_INDEX].push( temp );        
+        getCurrentKeyboard().DrawKey(event.key); 
     }
     else {temp = btn_template.cloneNode(true); 
-        array_Btn[CURENT_INDEX].push( temp ); temp.textContent+=event.key; 
+        array_Btn[CURENT_INDEX].push( temp ); 
+        temp.textContent+=event.key;              
         searchTree.add(event.keyCode);
-    }
-    temp.name +=event.key; 
-    temp.value+=event.key;          
-    temp[`${event.keyCode}`]=event.keyCode; 
-    temp.classList.add('bright');
-    array_Btn[CURENT_INDEX].pop(); array_Btn[CURENT_INDEX].push( temp ); 
+        temp.name +=event.key; 
+        temp.value +=event.key;          
+        temp[`${event.keyCode}`]=event.keyCode;
+        getCurrentKeyboard().DrawKey(event.key); 
+    }    
+    
+    
     //value = ( event.key+' ' +event.code+ ((event.altKey||event.ctrlKey||event.shiftKey)?"(":"|")+  
     //(event.altKey?" altKey ":"") + (event.ctrlKey?' ctrlKey ':'') + (event.shiftKey?' shiftKey ':'') + ((event.altKey||event.ctrlKey||event.shiftKey)?')|':''));    
     //maltyText.value = value;    

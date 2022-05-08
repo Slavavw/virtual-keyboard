@@ -59,9 +59,7 @@ button{
     transition-timing-function: ease-in-out;
     transition-duration: .5s;    
 };
-.bright {
-    color: red;        
-}; 
+
 article {
     display: flex; flex-flow: row nowrap;
     width: $width_keyboard; gap: $width_key;
