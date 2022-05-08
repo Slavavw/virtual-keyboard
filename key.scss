@@ -55,10 +55,13 @@ button{
     b{
         font-size: .7em; 
     } ;
-    .bright {
-        color: red;        
-    } 
+    transition-property: box-shadow, background, transform;
+    transition-timing-function: ease-in-out;
+    transition-duration: .5s;    
 };
+.bright {
+    color: red;        
+}; 
 article {
     display: flex; flex-flow: row nowrap;
     width: $width_keyboard; gap: $width_key;
@@ -67,6 +70,20 @@ article {
         width: 100px; 
     };
 };
+
+.exampl{
+    border: 1px dotted #cccccc;
+    width: calc(5*$width_key)px;
+    transition-property: box-shadow, background, transform;
+    transition-timing-function: ease-in-out;
+    transition-duration: .5s;
+}
+
+.focus {
+    background: linear-gradient(to bottom, rgba(0,102,153,.5) 40%,rgba(255,255,255,.5));
+    box-shadow: inset 4px 4px rgba(10,10,10,.1);
+    transform: scale(1.5);
+}
 
 
 

@@ -1,8 +1,6 @@
 class Node{
     constructor(value , row, col){
-      this.value = value;
-      this.row = row;
-      this.col = col;
+      this.value = value;      
       this.left = null;
       this.right = null;
     }
@@ -13,10 +11,10 @@ class BinarySearchTree {
     constructor(){
       this.root = null;
     };
-    add( value, row, col ){
-      this.root = addWithin( this.root,value, row, col );
-      function addWithin(node,value, row, col){
-        if( !node) return new Node(value, row, col);
+    add( value ){
+      this.root = addWithin( this.root,value);
+      function addWithin(node,value){
+        if( !node) return new Node(value);
         if ( value < node.value ){
           node.left = addWithin(node.left,value);
         }

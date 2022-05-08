@@ -56,13 +56,16 @@ button {
   border: none;
   border-radius: 5px;
   box-shadow: 0 0 2px white;
+  transition-property: box-shadow, background, transform;
+  transition-timing-function: ease-in-out;
+  transition-duration: .5s;
 }
 
 button b {
   font-size: .7em;
 }
 
-button .bright {
+.bright {
   color: red;
 }
 
@@ -76,4 +79,18 @@ article {
 
 article .init {
   width: 100px;
+}
+
+.exampl {
+  border: 1px dotted #cccccc;
+  width: calc(5*$width_key) px;
+  transition-property: box-shadow, background, transform;
+  transition-timing-function: ease-in-out;
+  transition-duration: .5s;
+}
+
+.focus {
+  background: linear-gradient(to bottom, rgba(0, 102, 153, 0.5) 40%, rgba(255, 255, 255, 0.5));
+  box-shadow: inset 4px 4px rgba(10, 10, 10, 0.1);
+  transform: scale(1.5);
 }

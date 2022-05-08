@@ -1,6 +1,7 @@
 
 //import  * as constant from "constant.js";
 //import BinarySearchTree from "binaryTreeSearch.js";
+
 var array_Btn;
 class KEYBOARD {
     constructor(lang,tab ){
@@ -10,10 +11,13 @@ class KEYBOARD {
         this.flag = false;
     }
 }
-var keyEngTab = new KEYBOARD(LANG_ENG,true), keyEng = new KEYBOARD(LANG_ENG,false), keyRusTab = new KEYBOARD(LANG_RUS,true), keyRus =new KEYBOARD(LANG_RUS,false);
+var keyEngTab = new KEYBOARD(LANG_ENG,true), 
+keyEng = new KEYBOARD(LANG_ENG,false), 
+keyRusTab = new KEYBOARD(LANG_RUS,true), 
+keyRus =new KEYBOARD(LANG_RUS,false);
 function getCurrentKeyboard(){
     return (document.querySelector('.lang').value === LANG_ENG)?
-     ((document.querySelector('input[type="radio"]:checked').value )?keyEngTab:keyEngTab):
+     ((document.querySelector('input[type="radio"]:checked').value )?keyEngTab:keyEng):
     ((document.querySelector('input[type="radio"]:checked').value )?keyRusTab:keyRus)
      } 
 
@@ -45,21 +49,10 @@ function initKeyBoard(event){ let row;
     for ( let i of row ){
         let r = Math.floor(i[0]/10), c = i[0]-r*10, {value, key, keyCode} = i[1][0];
         console.log(`row: ${r}===col:${c}===key:${key}` );
-        if (c===1 ){ array_Btn[r].unshift(value);
-            let srch = searchTree.find(keyCode);
-            srch.row = r; srch.col = 0;            
-        }
+        if (c===1 ){ array_Btn[r].unshift(value);}
         else {
-            if (c===9){ 
-                array_Btn[r].push(value);
-                let srch = searchTree.find(keyCode);
-                srch.row = r; srch.col = array_Btn[r].length-1;
-            }
-            else{ 
-                array_Btn[r].splice(c,0,value);
-                let srch = searchTree.find(keyCode);
-                srch.row = r; srch.col = c;                
-            }
+            if (c===9) array_Btn[r].push(value);                
+            else array_Btn[r].splice(c,0,value);                
         } 
     }    
     array_Btn.flag = true;
@@ -68,7 +61,7 @@ function initKeyBoard(event){ let row;
         el0.forEach( el1 =>{ row.append(el1) })
     })
     maltyText.removeEventListener("keyup",handleCreateShiftCtrl);
-    maltyText.removeEventListener("keypress", handleCreateKeys);    
+    maltyText.removeEventListener("keydown", handleCreateKeys);    
     if (event) event.preventDefault();
     BTN_Init.removeEventListener("click",initKeyBoard);
     document.body.addEventListener("keyup",handleBodyKey);    
@@ -118,7 +111,6 @@ select.map( el => el.addEventListener('change',event=>{
  }))
 
 const handlMouseUp = function(event){};
-btn_template.addEventListener('mouseup',handlMouseUp);
 class CtrlShiftKey{
     constructor(){this.length = 0;}
     add(key,value,keyCode,order){ this[this.length++] =[order,[{key,value,keyCode}]];}
@@ -140,7 +132,8 @@ class CtrlShiftKey{
 const ctrl_shift_key = new CtrlShiftKey();
 function handleCreateShiftCtrl(event){       
     if (searchTree.has(event.keyCode)) return;
-    searchTree.add(event.keyCode); 
+    if (/[a-z]{2,}/i.test(event.key) || /^space$/i.test(event.code)) 
+        searchTree.add(event.keyCode); 
     let temp = btn_template.cloneNode(true);
     temp.name =event.key; temp.value =event.key; temp.textContent = event.key;
     temp[`${event.keyCode}`]=event.keyCode; temp.style.width = `${KEY_WIDTH*2}px`;
@@ -168,9 +161,9 @@ function handleCreateShiftCtrl(event){
     }
     else if( /backspace/i.test(event.key)) {temp.style.width = `${KEY_WIDTH*2}px`; ctrl_shift_key.add(event.key,temp,event.keyCode,9);}
     if (/^space$/i.test(event.code)) { temp.style.width = `${KEY_WIDTH*6}px`; ctrl_shift_key.add(event.key,temp,event.keyCode,43);}
-    value = ( event.key+ ((event.altKey||event.ctrlKey||event.shiftKey)?"(":"|")+  
-    (event.altKey?" altKey ":"") + (event.ctrlKey?' ctrlKey ':'') + (event.shiftKey?' shiftKey ':'') + ((event.altKey||event.ctrlKey||event.shiftKey)?')|':'')); 
-    maltyText.value = value;
+    //value = ( event.key+ ((event.altKey||event.ctrlKey||event.shiftKey)?"(":"|")+  
+    //(event.altKey?" altKey ":"") + (event.ctrlKey?' ctrlKey ':'') + (event.shiftKey?' shiftKey ':'') + ((event.altKey||event.ctrlKey||event.shiftKey)?')|':'')); 
+    maltyText.value = event.key;
     event.preventDefault(); event.stopImmediatePropagation(); event.stopPropagation();
 }
 
@@ -195,21 +188,23 @@ function handleCreateKeys(event){ event.preventDefault(); event.stopImmediatePro
     if (  !event.location && event.shiftKey  ) {        
         temp = array_Btn[CURENT_INDEX][array_Btn[CURENT_INDEX].length-1];
         temp.insertAdjacentHTML("afterbegin",`<b>${event.key}</b>`);
-        searchTree.add(event.keyCode,CURENT_INDEX,array_Btn[CURENT_INDEX].length-1);
+        searchTree.add(event.keyCode);
     }
     else {temp = btn_template.cloneNode(true); 
         array_Btn[CURENT_INDEX].push( temp ); temp.textContent+=event.key; 
-        searchTree.add(event.keyCode,CURENT_INDEX,array_Btn[CURENT_INDEX].length-1);
+        searchTree.add(event.keyCode);
     }
     temp.name +=event.key; 
     temp.value+=event.key;          
-    temp[`${event.keyCode}`]=event.keyCode;    
+    temp[`${event.keyCode}`]=event.keyCode; 
+    temp.classList.add('bright');
     array_Btn[CURENT_INDEX].pop(); array_Btn[CURENT_INDEX].push( temp ); 
-    value = ( event.key+' ' +event.code+ ((event.altKey||event.ctrlKey||event.shiftKey)?"(":"|")+  
-    (event.altKey?" altKey ":"") + (event.ctrlKey?' ctrlKey ':'') + (event.shiftKey?' shiftKey ':'') + ((event.altKey||event.ctrlKey||event.shiftKey)?')|':''));    
-    maltyText.value = value;    
+    //value = ( event.key+' ' +event.code+ ((event.altKey||event.ctrlKey||event.shiftKey)?"(":"|")+  
+    //(event.altKey?" altKey ":"") + (event.ctrlKey?' ctrlKey ':'') + (event.shiftKey?' shiftKey ':'') + ((event.altKey||event.ctrlKey||event.shiftKey)?')|':''));    
+    //maltyText.value = value;    
+    maltyText.value = event.key;
 }
-maltyText.addEventListener("keypress", handleCreateKeys);
+maltyText.addEventListener("keydown", handleCreateKeys);
 
 function clearBinarySearchTree(){
     for (let i =0; i<5; i++){ 
@@ -224,7 +219,7 @@ function clearBinarySearchTree(){
 
 function clearRowKeys(){
     array_Btn.flag = false;
-    //clearBinarySearchTree();
+    clearBinarySearchTree();
     for (let i =0; i<5; i++){                
         while (array_Btn[i][0]) {
             delete array_Btn[i][0]
@@ -234,19 +229,19 @@ function clearRowKeys(){
         while (nav.firstChild) 
             nav.firstChild.remove();        
     }   
-    maltyText.addEventListener("keypress", handleCreateKeys);
+    maltyText.addEventListener("keydown", handleCreateKeys);
     maltyText.addEventListener("keyup",handleCreateShiftCtrl);
 }
 
-function handleBodyKey(event){
-    let temp = getCurrentKeyboard().array_Btn;
-    let searchBtn = searchTree.find(event.keyCode);
+function handleBodyKey(event){ 
+    let temp = array_Btn.flat(1).find( el=> `${event.keyCode}` in el )    
+    if(!temp) return;
     switch (event.type){
         case "keydown":
-            temp[searchBtn.row][searchBtn.col].classList.add('bright');            
+            temp.classList.add('focus');            
             break;
         case "keyup":
-            temp[searchBtn.row][searchBtn.col].classList.remove('bright');
+            temp.classList.remove('focus');
             break;
     }
 }
@@ -254,5 +249,26 @@ function handleBodyKey(event){
 document.body.removeEventListener("keyup",handleBodyKey);    
 document.body.removeEventListener("keydown",handleBodyKey);    
 
+const exmp = document.querySelector('.exampl');
+exmp.onclick =ClickAnime;
+
+function ClickAnime(event){
+    /*event.target.classList.add('focus');
+    exmp.removeEventListener("click",ClickAnime);
+    setTimeout( target =>{target.classList.remove('focus'); target.addEventListener("click",ClickAnime) },500,event.target);
+        */
+    new Promise((resolve,reject)=>{
+        event.target.removeEventListener("click",ClickAnime);
+        event.target.classList.add('focus');
+        setTimeout(resolve(event.target),1000);
+        }).then((target)=>{
+            target.addEventListener("click",ClickAnime);
+            target.classList.remove('focus');
+        });
+        event.preventDefault(); event.stopImmediatePropagation();        
+}        
+
+//btn_template.addEventListener('mouseup',handlMouseUp);
+btn_template.addEventListener('click',ClickAnime);
 
 
