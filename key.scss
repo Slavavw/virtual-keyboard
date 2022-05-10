@@ -28,7 +28,8 @@ body { max-width: 700px;
         margin: 10px $margin_left;
         display: flex; flex-flow: row nowrap;    
         border: 1px dotted #cccccc;
-        
+        color: red;
+        font-size: 1.8em;
     };
     select{
         height: $height_key;
@@ -74,7 +75,7 @@ article {
     width: calc(5*$width_key)px;
     transition-property: box-shadow, background, transform;
     transition-timing-function: ease-in-out;
-    transition-duration: .5s;
+    transition-duration: .3s;
 }
 
 .focus {
