@@ -1,8 +1,7 @@
 
 //import  * as constant from "constant.js";
 //import BinarySearchTree from "binaryTreeSearch.js";
- 
-var array_Btn;
+
 class KEYBOARD {
     constructor(lang,caps ){
         this.language = lang;       
@@ -21,10 +20,20 @@ class KEYBOARD {
         }
     }
     find( template='' ){
-        let temp = [...this.array_Btn].flat(1).find( (el,index) =>{ 
-            return el.hasOwnProperty(template);
-        });
-    }        
+        return [...this.array_Btn].flat(1).find(el=>el.hasOwnProperty(template)); 
+    }
+    getSize(){
+        return getCurrentKeyboard().array_Btn.map( el=>el.length).reduce((x,y)=>x+y);
+    }
+    getRowCol(key){ let row =-1, col =-1;
+        for (let i = 0; i<5; i ++){
+            for (j=0; j<this.array_Btn[i].length; j++ ){
+                if ( this.array_Btn[i][j] === key.name) { row =i; col = j; break; }
+            }
+            if ( row>=0) break;
+        }
+        return {row,col};
+    }
 }
 var keyEngTab = new KEYBOARD(LANG_ENG,true), 
 keyEng = new KEYBOARD(LANG_ENG,false), 
@@ -54,25 +63,23 @@ for (let i = 1; i<=5; i++ ){
     div.append(nav);
 }
 content.append(div);
-
 let article = document.createElement("article");
 let BTN_Init = document.createElement("button"); BTN_Init.classList.add('init'); BTN_Init.textContent='Initialization';
 BTN_Init.addEventListener("click",initKeyBoard);
-
 function initKeyBoard(event){ let row; 
     if (event){
         row = [...ctrl_shift_key].sort( (x,y) => x[0] - y[0]);
         for ( let i of row ){
             let r = Math.floor(i[0]/10), c = i[0]-r*10, {value, key} = i[1][0];
             console.log(`row: ${r}===col:${c}===key:${key}` );
-            if (c===1 ){ array_Btn[r].unshift(value);
+            if (c===1 ){ getCurrentKeyboard().array_Btn[r].unshift(value);
                 row = document.querySelector(`.row${r+1}`); row.prepend(value);
             }
             else {
-                if (c===9) {array_Btn[r].push(value);
+                if (c===9) {getCurrentKeyboard().array_Btn[r].push(value);
                     row = document.querySelector(`.row${r+1}`); row.append(value);
                 }
-                else{ array_Btn[r].splice(c,0,value);
+                else{ getCurrentKeyboard().array_Btn[r].splice(c,0,value);
                     /*row = document.querySelector(`.row${r+1}`); 
                     let child = row.children[row.children.length-1]; 
                     child.before(value);*/
@@ -81,18 +88,17 @@ function initKeyBoard(event){ let row;
             } 
         }    
         getCurrentKeyboard().flag = true;
-        maltyText.removeEventListener("keyup",handleCreateShiftCtrl);
-        maltyText.removeEventListener("keypress", handleCreateKeys);    
-        event.preventDefault();
-        BTN_Init.removeEventListener("click",initKeyBoard);
-        document.body.addEventListener("keyup",handleBodyKey);    
-        document.body.addEventListener("keypress",handleBodyKey);
+        onoff_Event(false);
+        event.preventDefault();                
         maltyText.value ='';
         setCookie(1); 
     }
     else {
-        array_Btn.forEach( (el0,index) =>{ row = document.querySelector(`.row${index+1}`);
+        for ( let i = 1;i<=5; i++ ) {
+            let row = document.querySelector(`.row${i}`);
             while ( row.firstChild ) row.firstChild.remove();
+        }        
+        getCurrentKeyboard().array_Btn.forEach( (el0,index) =>{ row = document.querySelector(`.row${index+1}`); 
             el0.forEach( el1 =>{ row.append(el1) })
         })        
     }        
@@ -119,11 +125,11 @@ select_caps.innerHTML = `<fieldset style="border: 1px dotted #cccccc; width: 100
  <label>On</label><br>
  <input type="radio"  name ="CAPS" checked value= false>
  <label>Off</label><br>
- </fieldset>`
+ </fieldset>`;
+ select_caps.style.display = 'none';
 article.append(select_caps); 
 template_Key.content.append(article);
 document.body.prepend(template_Key.content);
-array_Btn = getCurrentKeyboard().array_Btn;
 //************************************************
 Array.from(document.querySelectorAll('article select, article input')).map( el => el.addEventListener('change',event=>{
      switch ( event.target.name ){
@@ -131,8 +137,7 @@ Array.from(document.querySelectorAll('article select, article input')).map( el =
             CURENT_INDEX = event.target.selectedIndex;            
             break;
         case 'lang':
-        case 'CAPS':            
-            array_Btn = getCurrentKeyboard().array_Btn;
+        case 'CAPS':                        
             if (getCurrentKeyboard().flag) initKeyBoard();
             else clearRowKeys();
             break;
@@ -150,6 +155,9 @@ class CtrlShiftKey{
     find( template='' ){ 
         return [...this].flat(2).find( el=> el.key === template );
     }
+    findIndex( template='' ){ 
+        return [...this].flat(2).findIndex( el=> el.key === template );
+    }
     [Symbol.iterator]() { let iterator = 0, obj = this;
         return {   
             next(){ return (iterator< obj.length ? { done: false, value: obj[iterator++]}:{ done: true}) }
@@ -161,14 +169,16 @@ class CtrlShiftKey{
     } */  
 };
 
-function getLastBtn(start ){ CURENT_INDEX = start;
-    while (array_Btn[start][array_Btn[start].length -1 ] === undefined){
+function getLastBtn(start ){ CURENT_INDEX = start; let a = getCurrentKeyboard().array_Btn;
+    while (a[start][a[start].length -1 ] === undefined){
         return getLastBtn(--start);
     }
-    return ( (array_Btn[start][array_Btn[start].length -1 ] === undefined)?null:array_Btn[start][array_Btn[start].length -1 ] );
+    return ( (a[start][a[start].length -1 ] === undefined)?null:a[start][a[start].length -1 ] );
 }
 
 const ctrl_shift_key = new CtrlShiftKey();
+
+onoff_Event();
 
 ///*****create ctrl shift enter */
 function handleCreateShiftCtrl(event){ 
@@ -180,7 +190,7 @@ function handleCreateShiftCtrl(event){
             key = getLastBtn(CURENT_INDEX);
             if (key){
                 getCurrentKeyboard().DrawKey('backspace');
-                array_Btn[CURENT_INDEX].pop();
+                getCurrentKeyboard().array_Btn[CURENT_INDEX].pop();
             }            
             else{  CURENT_INDEX = 0; }
             select_row.selectedIndex = CURENT_INDEX;
@@ -221,24 +231,25 @@ function handleCreateShiftCtrl(event){
     event.preventDefault(); event.stopImmediatePropagation(); event.stopPropagation();
 }
 
-maltyText.addEventListener("keyup",handleCreateShiftCtrl);
-
 ///******create auther key */
 function handleCreateKeys(event){ 
     let codeKey = event.key, key = 'key_'+codeKey;
     if (/[a-z]{2,}/i.test(event.key) || /^space$/i.test(event.code)) return;
+
+    if ( event.shiftKey && /[a-z]|[а-я]{1}/i.test(codeKey) ) {event.preventDefault(); return;}
+
     event.preventDefault(); event.stopImmediatePropagation(); event.stopPropagation();    
     if ( /q|й{1}/i.test(event.key))  CURENT_INDEX =1;    
     else if ( /a|ф{1}/i.test(event.key)) CURENT_INDEX = 2;      
     else if ( /z|я{1}/i.test(event.key) ) CURENT_INDEX = 3;      
-    else if (/(~|\`|Ё){1}/i.test(event.key)) CURENT_INDEX = 0;    
+    else if (/(~|\`|Ё){1}/i.test(event.key)) CURENT_INDEX = 0;
     select_row.selectedIndex = CURENT_INDEX;
     if ( getCurrentKeyboard().find(key) || ctrl_shift_key.find(key)) return;     
     if (  !event.location && event.shiftKey  ) {
-        let curElement = array_Btn[CURENT_INDEX][array_Btn[CURENT_INDEX].length-1];
+        let curElement = getCurrentKeyboard().array_Btn[CURENT_INDEX][getCurrentKeyboard().array_Btn[CURENT_INDEX].length-1];
         temp = Object.assign(curElement,curElement.cloneNode(true));        
         getCurrentKeyboard().DrawKey('backspace');
-        array_Btn[CURENT_INDEX].pop();
+        getCurrentKeyboard().array_Btn[CURENT_INDEX].pop();
         temp.insertAdjacentHTML("afterbegin",`<b>${event.key}</b>`);
     }
     else {
@@ -248,76 +259,78 @@ function handleCreateKeys(event){
     temp.name +=event.key; 
     temp.value +=event.key;    
     temp[`${key}`] = codeKey;
-    array_Btn[CURENT_INDEX].push( temp );
+    getCurrentKeyboard().array_Btn[CURENT_INDEX].push( temp );
     getCurrentKeyboard().DrawKey(event.key);     
     maltyText.value = event.key;
 }
-function onCaps(){
-    array_Btn = getCurrentKeyboard().array_Btn; 
-    if (getCurrentKeyboard().flag) initKeyBoard();
-    else clearRowKeys();
-    document.querySelector('select .row')
-    
-
-}
-
-maltyText.addEventListener("keypress", handleCreateKeys);
-
 
 function clearRowKeys(){
     maltyText.value ='';
     getCurrentKeyboard().flag = false;
     for (let i =0; i<5; i++){                
         while (getCurrentKeyboard().array_Btn[i][0]) {
-            delete array_Btn[i][0]
+            delete getCurrentKeyboard().array_Btn[i][0]
         }; 
         getCurrentKeyboard().array_Btn[i].length =0;
         let nav = document.querySelector(`.row${i+1}`);
         while (nav.firstChild) 
             nav.firstChild.remove();        
-    }   
-    maltyText.addEventListener("keypress", handleCreateKeys);
-    maltyText.addEventListener("keyup",handleCreateShiftCtrl);
+    } 
+    onoff_Event();    
 }
 
+function setCapsLock(){
+    let checked = document.querySelector('input[type="radio"]:checked').value;
+    if (checked === 'false'  ) document.querySelector(`input[type="radio"][value="true"]`).checked = true
+    else document.querySelector(`input[type="radio"][value="false"]`).checked = true
+    return document.querySelector('input[type="radio"]:checked').value === 'true';
+}
 
 function handleBodyKey(event){
-    let key = 'key_'+event.key, temp;
+    let key = `key_${/^space$/i.test(event.code)?event.code:event.key}`, temp; 
     switch (event.type){
-        case "keyup": document.body.removeEventListener("keyup",handleBodyKey); document.addEventListener("keypress",handleBodyKey); 
-            temp = getCurrentKeyboard().array_Btn.flat(1).find( el=> `${key}` in el );  
-            if (!temp) return;
-            if ( ! temp.classList.contains('focus')) {temp.classList.add('focus'); setTimeout(t=>{t.classList.remove('focus')},500,temp) }
-            else temp.classList.remove('focus'); 
-            if (!event.location && event.shiftKey && /([A-Z][a-z]+)|([А-Я][а-я]+)/gm.test(event.key)){
-                let aa =1;
-            }
+        case "keydown": 
+                if ( /capslock/i.test(event.key)){ 
+                    setCapsLock(); initKeyBoard();
+                    onoff_Event( !getCurrentKeyboard().flag );
+                    event.preventDefault();
+                }
+                else {
+                    temp = getCurrentKeyboard().find(key);
+                    if (!temp) return;
+                    if ( ! temp.classList.contains('focus')) {temp.classList.add('focus'); setTimeout(t=>{t.classList.remove('focus')},300,temp) }
+                    else temp.classList.remove('focus');
+                }
             break;
-        case "keypress": 
-            document.body.removeEventListener("keypress",handleBodyKey); document.addEventListener("keyup",handleBodyKey);            
+        case "keypress":             
             maltyText.value+=event.key; 
-            if (  (!event.location && event.shiftKey && /([A-Z])|([А-Я])/i.test(event.key)) || (/caps/i.test(event.key) ) ){                
-                let checked = document.querySelector('input[type="radio"]:checked').value;
-                if (checked === 'false'  ) document.querySelector(`input[type="radio"][value="true"]`).setAttribute('checked',true);
-                else document.querySelector(`input[type="radio"][value="false"]`).setAttribute('checked',true);
+            if (  (!event.location && event.shiftKey && /[A-Z]|[А-Я]{1}/i.test(event.key)) || (/capslock/i.test(event.key) ) ){ 
+                let size = getCurrentKeyboard().getSize(), {row,col} = getCurrentKeyboard().getRowCol(event.key);
+                setCapsLock();
+                if ((!getCurrentKeyboard().flag) || (size !== getCurrentKeyboard().getSize() )){ setCapsLock(); } 
+                else {
+                    if (row<0) return;
+                    let tamp = getCurrentKeyboard().array_Btn[row][col];
+                    temp.classList.add('focus');
+                    setCapsLock();
+                }
                 let r= ctrl_shift_key.find('shift');
                 r = getCurrentKeyboard().array_Btn.flat(1).find( el=> `${key}` in el );    
-                if(r) r.classList.add('focus');
-            }
+                if(r) r.classList.add('focus');                
+            }            
             temp = getCurrentKeyboard().array_Btn.flat(1).find( el=> `${key}` in el );    
             if(!temp) return;
             temp.classList.add('focus');
             initKeyBoard();
+            break;
+        case "keyup":            
+            if ( /capslock/i.test(event.key)){ 
+                setCapsLock(); initKeyBoard();
+                onoff_Event( !getCurrentKeyboard().flag );
+            }
+            break;
     }
 }
-
-//document.body.removeEventListener("keypress",handleBodyKey);    
-document.body.removeEventListener("keyup",handleBodyKey);    
-document.body.removeEventListener("keypress",handleBodyKey);    
-
-
-const exmp = document.querySelector('.exampl');
-exmp.onclick =ClickAnime;
 
 function ClickAnime(event){
     /*event.target.classList.add('focus');
@@ -388,7 +401,7 @@ function setCookie(daysToLive = null){
     let cookie = `language=${JSON.stringify({language:keyEng.language,caps:keyEng.caps})}`;
     cookies+=cookie;
     for ( let i=0; i<5; i++){
-        for (let j=0; j<keyEng.array_Btn[i].length;j++){ let el = keyEng.array_Btn[i][j];        
+        for (let j=0; j<getCurrentKeyboard().array_Btn[i].length;j++){ let el = getCurrentKeyboard().array_Btn[i][j];  
             let obj = {name:el.name,value:el.value}; 
             Object.assign(obj,el);        
             let value = encodeURIComponent(JSON.stringify(obj));
@@ -398,6 +411,37 @@ function setCookie(daysToLive = null){
     }
     cookies+=`;max-age=${daysToLive*60*60*24}`;
     document.cookie= cookies;     
+}
+
+
+document.querySelector("div").addEventListener("click",handkeMouseAction);
+
+const handkeMouseAction = function(event){
+    let k = event.target.elementFromPoint();    
+}
+
+function onoff_Event(on = true){
+    if (on) {
+        maltyText.addEventListener("keypress", handleCreateKeys);
+        maltyText.addEventListener("keyup",handleCreateShiftCtrl);
+        
+        BTN_Init.addEventListener("click",initKeyBoard);
+
+        document.body.removeEventListener("keydown",handleBodyKey);    
+        document.body.removeEventListener("keypress",handleBodyKey); 
+        document.body.removeEventListener("keyup",handleBodyKey);
+
+    }
+    else{
+        maltyText.removeEventListener("keyup",handleCreateShiftCtrl);
+        maltyText.removeEventListener("keypress", handleCreateKeys);    
+        
+        BTN_Init.removeEventListener("click",initKeyBoard);
+        
+        document.body.addEventListener("keydown",handleBodyKey);    
+        document.body.addEventListener("keypress",handleBodyKey);
+        document.body.addEventListener("keyup",handleBodyKey);    
+    }
 }
 
 
