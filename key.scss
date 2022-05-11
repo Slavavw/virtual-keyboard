@@ -39,6 +39,10 @@ body { max-width: 700px;
         border-radius: 5px;
         box-shadow: 0 0 2px white;
     };
+    input [type="radio"]:checked {
+        visibility: inherit;
+        color: #38da38;
+    };
 };
 
 button{

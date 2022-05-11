@@ -27,8 +27,8 @@ class KEYBOARD {
     }
     getRowCol(key){ let row =-1, col =-1;
         for (let i = 0; i<5; i ++){
-            for (j=0; j<this.array_Btn[i].length; j++ ){
-                if ( this.array_Btn[i][j] === key.name) { row =i; col = j; break; }
+            for ( let j=0; j<this.array_Btn[i].length; j++ ){
+                if ( this.array_Btn[i][j].name === key.name) { row =i; col = j; break; }
             }
             if ( row>=0) break;
         }
@@ -89,8 +89,7 @@ function initKeyBoard(event){ let row;
         }    
         getCurrentKeyboard().flag = true;
         onoff_Event(false);
-        event.preventDefault();                
-        maltyText.value ='';
+        event.preventDefault();         
         setCookie(1); 
     }
     else {
@@ -101,7 +100,7 @@ function initKeyBoard(event){ let row;
         getCurrentKeyboard().array_Btn.forEach( (el0,index) =>{ row = document.querySelector(`.row${index+1}`); 
             el0.forEach( el1 =>{ row.append(el1) })
         })        
-    }        
+    } maltyText.value ='';       
 };
 
 article.append(BTN_Init);
@@ -126,7 +125,11 @@ select_caps.innerHTML = `<fieldset style="border: 1px dotted #cccccc; width: 100
  <input type="radio"  name ="CAPS" checked value= false>
  <label>Off</label><br>
  </fieldset>`;
- select_caps.style.display = 'none';
+ //select_caps.style.display = 'none';
+ select_caps.addEventListener('click',event=>{
+     event.preventDefault(); event.stopPropagation();
+    }
+    );
 article.append(select_caps); 
 template_Key.content.append(article);
 document.body.prepend(template_Key.content);
@@ -181,6 +184,7 @@ const ctrl_shift_key = new CtrlShiftKey();
 onoff_Event();
 
 ///*****create ctrl shift enter */
+
 function handleCreateShiftCtrl(event){ 
     let codeKey = (/^space$/i.test(event.code))?event.code:event.key, key = 'key_'+codeKey;
     if (ctrl_shift_key.find(key)){
@@ -235,9 +239,11 @@ function handleCreateShiftCtrl(event){
 function handleCreateKeys(event){ 
     let codeKey = event.key, key = 'key_'+codeKey;
     if (/[a-z]{2,}/i.test(event.key) || /^space$/i.test(event.code)) return;
-
-    if ( event.shiftKey && /[a-z]|[а-я]{1}/i.test(codeKey) ) {event.preventDefault(); return;}
-
+    if ( /[a-z]|[а-я]{1}/i.test(codeKey) ) {        
+        if ( event.shiftKey ||
+             (getCurrentKeyboard().caps && (event.key === event.key.toLowerCase())) ||
+        (!getCurrentKeyboard().caps && (event.key === event.key.toUpperCase())) ) event.preventDefault(); return;
+    }
     event.preventDefault(); event.stopImmediatePropagation(); event.stopPropagation();    
     if ( /q|й{1}/i.test(event.key))  CURENT_INDEX =1;    
     else if ( /a|ф{1}/i.test(event.key)) CURENT_INDEX = 2;      
@@ -279,40 +285,56 @@ function clearRowKeys(){
     onoff_Event();    
 }
 
-function setCapsLock(){
-    let checked = document.querySelector('input[type="radio"]:checked').value;
-    if (checked === 'false'  ) document.querySelector(`input[type="radio"][value="true"]`).checked = true
-    else document.querySelector(`input[type="radio"][value="false"]`).checked = true
-    return document.querySelector('input[type="radio"]:checked').value === 'true';
+function setCapsLock_Lang(type = 'caps'){
+    if ( type = 'caps'){
+        let checked = document.querySelector('input[type="radio"]:checked').value;
+        if (checked === 'false'  ) document.querySelector(`input[type="radio"][value="true"]`).checked = true
+        else document.querySelector(`input[type="radio"][value="false"]`).checked = true
+        document.querySelector('input[type="radio"]:checked').value === 'true';
+    }
+    else{
+        select_lang.children[select_lang.selectedIndex] =select_lang.children[!select_lang.selectedIndex];
+    }
+    initKeyBoard();
+    onoff_Event( !getCurrentKeyboard().flag );
 }
 
-function handleBodyKey(event){
-    let key = `key_${/^space$/i.test(event.code)?event.code:event.key}`, temp; 
+function handleBodyKey(event){ event.preventDefault();event.stopPropagation();
+    let key = event.key, temp;   
+    if ( event.key.length===1 ){
+        key = getCurrentKey(event.key,event.shiftKey);
+        if (!key) return;
+        maltyText.value += key; key =`key_${key}`;
+    }
+    else {
+        if (/^space$/i.test(event.code)) {maltyText.value +=' ';
+            key =`key_${event.code}`;
+        }
+        if (/back/i.test(event.key) ) 
+            maltyText.value = maltyText.value.substring(0,maltyText.value.length-1);
+    }
     switch (event.type){
-        case "keydown": 
-                if ( /capslock/i.test(event.key)){ 
-                    setCapsLock(); initKeyBoard();
-                    onoff_Event( !getCurrentKeyboard().flag );
-                    event.preventDefault();
-                }
-                else {
-                    temp = getCurrentKeyboard().find(key);
-                    if (!temp) return;
-                    if ( ! temp.classList.contains('focus')) {temp.classList.add('focus'); setTimeout(t=>{t.classList.remove('focus')},300,temp) }
-                    else temp.classList.remove('focus');
-                }
+        case "keydown":                
+                if ( /capslock/i.test(event.key) )                   
+                        setCapsLock_Lang();
+                if ( /shift/i.test(event.key) && event.altKey ){                
+                        setCapsLock_Lang('language');
+                 }
+                temp = getCurrentKeyboard().find(key);
+                if (!temp) return;
+                if ( ! temp.classList.contains('focus')) {temp.classList.add('focus'); setTimeout(t=>{t.classList.remove('focus')},300,temp) }
+                else temp.classList.remove('focus');                
             break;
-        case "keypress":             
-            maltyText.value+=event.key; 
+        case "keypress":            
             if (  (!event.location && event.shiftKey && /[A-Z]|[А-Я]{1}/i.test(event.key)) || (/capslock/i.test(event.key) ) ){ 
                 let size = getCurrentKeyboard().getSize(), {row,col} = getCurrentKeyboard().getRowCol(event.key);
-                setCapsLock();
-                if ((!getCurrentKeyboard().flag) || (size !== getCurrentKeyboard().getSize() )){ setCapsLock(); } 
+                setCapsLock_Lang();
+                if ((!getCurrentKeyboard().flag) || (size !== getCurrentKeyboard().getSize() )){ setCapsLock_Lang(); } 
                 else {
                     if (row<0) return;
                     let tamp = getCurrentKeyboard().array_Btn[row][col];
                     temp.classList.add('focus');
-                    setCapsLock();
+                    setCapsLock_Lang();
                 }
                 let r= ctrl_shift_key.find('shift');
                 r = getCurrentKeyboard().array_Btn.flat(1).find( el=> `${key}` in el );    
@@ -325,11 +347,26 @@ function handleBodyKey(event){
             break;
         case "keyup":            
             if ( /capslock/i.test(event.key)){ 
-                setCapsLock(); initKeyBoard();
-                onoff_Event( !getCurrentKeyboard().flag );
+                setCapsLock_Lang();
             }
             break;
+    }    
+}
+
+function getCurrentKey(key,shiftKey ){ let result = undefined;    
+    for ( let temp of [keyEng,keyEngTab,keyRus,keyRusTab ]){
+        let simb = temp.find('key_'+key);
+        if ( simb ) { let {row, col} = temp.getRowCol(simb);
+            if ( getCurrentKeyboard() !== temp ) { result = getCurrentKeyboard().array_Btn[row][col].value; 
+                if (result.length ==2) {
+                    result = shiftKey?v[1]:v[0];
+                }
+            }
+            else result = key;
+            break;
+        }
     }
+    return result;
 }
 
 function ClickAnime(event){
@@ -410,7 +447,9 @@ function setCookie(daysToLive = null){
         }
     }
     cookies+=`;max-age=${daysToLive*60*60*24}`;
-    document.cookie= cookies;     
+    //document.cookie= cookies;     
+    document.cookie = "user=John; max-age=3600";
+
 }
 
 

@@ -42,6 +42,11 @@ body select {
   box-shadow: 0 0 2px white;
 }
 
+body input [type="radio"]:checked {
+  visibility: inherit;
+  color: #38da38;
+}
+
 button {
   display: flex;
   flex-flow: row nowrap;
