@@ -10,15 +10,24 @@ class KEYBOARD {
         this.flag = false;
     }
     DrawKey(key, del = false){ let row = document.querySelector(`.row${CURENT_INDEX+1}`)
-        if (/backspace/i.test(key) ) {
-            if (this.array_Btn[CURENT_INDEX].length ) {
-                //row.children[this.array_Btn[CURENT_INDEX].length-1].remove(); 
-                row.querySelector(`button[name=${key.name}]`).remove();
+        if (del) {
+            if (this.array_Btn[CURENT_INDEX].length ) {                
+                let a = [...row.querySelectorAll(`button`)].filter( el=> el.name ===key.name );
+                if ( a.length ) a[0].remove();                
             }
         }
         else{ 
             //row.append(this.array_Btn[CURENT_INDEX][this.array_Btn[CURENT_INDEX].length-1]);
-            row.append(key);
+            if ( !CURENT_INDEX){ let a = [...row.querySelectorAll(`button`)].filter( el=>/space/i.test(el.name));
+                if (a.length) a[0].before(key);
+                else row.append(key);
+            }
+            else if ( CURENT_INDEX===1 ){
+                let enter = [...row.querySelectorAll(`button`)].filter( el=>/enter/i.test(el.name));
+                if (enter.length) enter[0].before(key);
+                else row.append(key);                
+            }
+            else row.append(key);
         }
     }
     find( template='' ){
@@ -71,34 +80,18 @@ BTN_Init.addEventListener("click",initKeyBoard);
 function initKeyBoard(event){ let row; 
     if (event){
         ctrl_shift_key.DrawKey();
-        /*row = [...ctrl_shift_key].sort( (x,y) => x[0] - y[0]);
-        for ( let i of row ){
-            let r = Math.floor(i[0]/10), c = i[0]-r*10, {value, key} = i[1][0];            
-            if (c===1 ){ getCurrentKeyboard().array_Btn[r].unshift(value);
-                row = document.querySelector(`.row${r+1}`); row.prepend(value);
-            }
-            else {
-                if (c===9) {getCurrentKeyboard().array_Btn[r].push(value);
-                    row = document.querySelector(`.row${r+1}`); row.append(value);
-                }
-                else{ getCurrentKeyboard().array_Btn[r].splice(c,0,value);
-                    row = document.querySelector(`.row${r+1}`); row.append(value);
-                }
-            } 
-        }*/    
         getCurrentKeyboard().flag = true;
         onoff_Event(false);
-        event.preventDefault();         
-        setCookie(1); 
+        event.preventDefault();                 
     }
-    else {
+    else {        
         for ( let i = 1;i<=5; i++ ) {
             let row = document.querySelector(`.row${i}`);
             while ( row.firstChild ) row.firstChild.remove();
-        }        
-        getCurrentKeyboard().array_Btn.forEach( (el0,index) =>{ row = document.querySelector(`.row${index+1}`); 
-            el0.forEach( el1 =>{ row.append(el1) })
-        })        
+        } ctrl_shift_key.DrawKey();
+        let curentKeyboard = getCurrentKeyboard();
+        curentKeyboard.array_Btn.forEach( (el,index) =>{ CURENT_INDEX = index;
+            curentKeyboard.array_Btn[index].forEach( el0=>{curentKeyboard.DrawKey(el0);})})
     } maltyText.value ='';       
 };
 
@@ -149,16 +142,9 @@ Array.from(document.querySelectorAll('article select, article input')).map( el =
 const handlMouseUp = function(event){};
 class CtrlShiftKey{
     constructor(){this.length = 0;}
-    add(key,value,order){ this[this.length++] =[order,[{key:key,value:value}]];}
-    has(code){ 
-        let temp = [...this].flat(2).find( el => el.key === code);
-        return temp;
-    }
+    add(key,value,order){ this[this.length++] =[order,{key:key,value:value}];}
     find( template='' ){ 
-        return [...this].flat(2).find( el=> el.key === template );
-    }
-    findIndex( template='' ){ 
-        return [...this].flat(2).findIndex( el=> el.key === template );
+        return [...this].flat(1).find( el=> el.value === template );
     }
     [Symbol.iterator]() { let iterator = 0, obj = this;
         return {   
@@ -172,125 +158,80 @@ class CtrlShiftKey{
     DrawKey(){
         let row = [...this].sort( (x,y) => x[0] - y[0]);
         for ( let i of row ){
-            let r = Math.floor(i[0]/10), c = i[0]-r*10, {value, key} = i[1][0];
-            //let temp = document.querySelector(`.row${r+1} button[name=${value.name}]`); 
-            let temp =document.querySelector(`.row${r+1} button[name=${Object.keys(value)[0]}]`);
-            if (temp) {
-                temp.remove(); console.log(temp);
-            }
-            if (c===1 ){ getCurrentKeyboard().array_Btn[r].unshift(value);
-                row = document.querySelector(`.row${r+1}`); row.prepend(value);
-            }
-            else {
-                if (c===9) {getCurrentKeyboard().array_Btn[r].push(value);
-                    row = document.querySelector(`.row${r+1}`); row.append(value);
-                }
-                else{ getCurrentKeyboard().array_Btn[r].splice(c,0,value);
-                    row = document.querySelector(`.row${r+1}`); row.append(value);
-                }
-            } 
-        }    
-        
+            let r = Math.floor(i[0]/10),c =i[0]%10,{value, key} = i[1];
+            console.log(value," ",key.name);            
+            let temp =document.querySelector(`.row${r+1} button[name=${value}]`);
+            if (temp) temp.remove(); 
+            row = document.querySelector(`.row${r+1}`); 
+            if( c ===1) row.prepend(key);
+            else row.append(key);             
+        }
     }
 };
 
-function getLastBtn(start ){ CURENT_INDEX = start; let a = getCurrentKeyboard().array_Btn;
-    while (a[start][a[start].length -1 ] === undefined){
+function getLastBtn(start ){ CURENT_INDEX = start<0?4:start; let a = getCurrentKeyboard().array_Btn[start];
+    while (a[a.length -1 ] === undefined){
         return getLastBtn(--start);
     }
-    return ( (a[start][a[start].length -1 ] === undefined)?null:a[start][a[start].length -1 ] );
+    return ( (a[a.length -1 ] === undefined)?null:a[a.length -1 ] );
 }
 
-const ctrl_shift_key = new CtrlShiftKey();
+let ctrl_shift_key = new CtrlShiftKey();
 
 onoff_Event();
 
-///*****create ctrl shift enter */
-
-function handleCreateShiftCtrl(event){ event.preventDefault(); event.stopPropagation();
-    if ( event.key.length<2 && !/space/i.test(event.code) ){ return;}    
-    let codeKey = (/^space$/i.test(event.code))?event.code:event.key, key = 'key_'+codeKey;
-    if (ctrl_shift_key.find(key)){
-        if( /backspace/i.test(event.key)){
-            console.log(event.key);
-            console.log(key);
-            key = getLastBtn(CURENT_INDEX);
-            if (key){
-                getCurrentKeyboard().DrawKey(key,true);
-                getCurrentKeyboard().array_Btn[CURENT_INDEX].pop();
-            }            
-            else{  CURENT_INDEX = 0; }
-            select_row.selectedIndex = CURENT_INDEX;
-        }        
-     return;    
-    }
-    let temp = btn_template.cloneNode(true);
-    temp.name =event.key; temp.value =event.key; temp.textContent = event.key;
-    temp[`${key}`] = codeKey; 
-    temp.style.width = `${KEY_WIDTH*2}px`;
-    if ( /TAB/i.test(event.key))ctrl_shift_key.add(key,temp,11);
-    else if (/capslock/i.test(event.key)) ctrl_shift_key.add(key,temp,21);
-    else if (/enter/i.test(event.key)) ctrl_shift_key.add(key,temp,19);
-    else if ( /SHIFT/i.test(event.key)) {temp.style.width = `${KEY_WIDTH*2.2}px`; ctrl_shift_key.add(key,temp,31); }
-    else if (/Control/i.test(event.key)) {temp.style.width = `${KEY_WIDTH*1.4}px`;ctrl_shift_key.add(key,temp,41); }
-    else if (/alt/i.test(event.key)){temp.style.width = `${KEY_WIDTH*1.4}px`; ctrl_shift_key.add(key,temp,42); }
-    else if (/arrowleft/i.test(event.key) ){
-        temp.textContent = 'left';
-        temp.style.width = `${KEY_WIDTH*1.4}px`; ctrl_shift_key.add(key,temp,44); 
-    }
-    else if (/arrowup/i.test(event.key) ){ 
-        temp.textContent = 'up';
-        temp.style.width = `${KEY_WIDTH*1.4}px`; ctrl_shift_key.add(key,temp,45);
-    }
-    else if (/arrowdown/i.test(event.key) ){ 
-        temp.textContent = 'down';
-        temp.style.width = `${KEY_WIDTH*1.4}px`; ctrl_shift_key.add(key,temp,46); 
-    }
-    else if (/arrowright/i.test(event.key) ){ 
-        temp.textContent = 'right';
-        temp.style.width = `${KEY_WIDTH*1.4}px`; ctrl_shift_key.add(key,temp,47); 
-    }
-    else if( /backspace/i.test(event.key)) {        
-        temp.style.width = `${KEY_WIDTH*2}px`; ctrl_shift_key.add(key,temp,9);  
-    }
-    if (/^space$/i.test(event.code)) { temp.style.width = `${KEY_WIDTH*6}px`; ctrl_shift_key.add(key,temp,43); }
-    ctrl_shift_key.DrawKey(temp);
-    maltyText.value = event.key;    
-}
-
 ///******create auther key */
-function handleCreateKeys(event){ let codeKey =event.key, key;     
-    if ( (/([a-z]|[а-я]){2,}/i.test(event.key))  || /^space$/i.test(event.code)) return; 
-    if (getCurrentKeyboard().caps) codeKey = event.key.toUpperCase();
-    else codeKey = event.key.toLowerCase();    
-    if ( event.altKey && /shift/i.test(event.key)){
-        setCapsLock_Lang();        
+function handleCreateKeys(event){ let codeKey =event.key, key; 
+    let temp = btn_template.cloneNode(true);
+    if ( ( event.key.length !=1)  || /^space$/i.test(event.code)) { 
+        key = "key_"+(/^space$/i.test(event.code)?"space":event.key);
+        if (ctrl_shift_key.find(key)){
+            if( /backspace/i.test(key)){
+                key = getLastBtn(CURENT_INDEX);
+                if (key){
+                    getCurrentKeyboard().DrawKey(key,true);
+                    getCurrentKeyboard().array_Btn[CURENT_INDEX].pop();
+                }            
+                else{  CURENT_INDEX = 0; }
+                select_row.selectedIndex = CURENT_INDEX;
+            }        
+        return;    
+        }
+        createCtrlKey(temp,event.key );        
+        ctrl_shift_key.DrawKey();
+        maltyText.value = event.key; 
     }
-    key = 'key_'+codeKey;
-    event.preventDefault(); event.stopImmediatePropagation(); event.stopPropagation();    
-    if ( /q|й{1}/i.test(codeKey))  CURENT_INDEX =1;    
-    else if ( /a|ф{1}/i.test(codeKey)) CURENT_INDEX = 2;      
-    else if ( /z|я{1}/i.test(codeKey) ) CURENT_INDEX = 3;      
-    else if (/(~|\`|Ё){1}/i.test(codeKey)) CURENT_INDEX = 0;
-    select_row.selectedIndex = CURENT_INDEX;
-    if ( getCurrentKeyboard().find(key) || ctrl_shift_key.find(key)) return;     
-    if (  !event.location && event.shiftKey && !/([a-z]|[а-я])/i.test(event.key)   ) {
-        let curElement = getCurrentKeyboard().array_Btn[CURENT_INDEX][getCurrentKeyboard().array_Btn[CURENT_INDEX].length-1];
-        temp = Object.assign(curElement,curElement.cloneNode(true));  
-        getCurrentKeyboard().DrawKey(temp,true);
-        getCurrentKeyboard().array_Btn[CURENT_INDEX].pop();
-        temp.insertAdjacentHTML("afterbegin",`<b>${codeKey}</b>`);
+    else{
+        if (getCurrentKeyboard().caps) codeKey = event.key.toUpperCase();
+        else codeKey = event.key.toLowerCase();    
+        if ( event.altKey && /shift/i.test(event.key)){
+            setCapsLock_Lang();        
+        }
+        key = 'key_'+codeKey;
+        event.preventDefault(); event.stopImmediatePropagation(); event.stopPropagation();    
+        if ( /q|й{1}/i.test(codeKey))  CURENT_INDEX =1;    
+        else if ( /a|ф{1}/i.test(codeKey)) CURENT_INDEX = 2;      
+        else if ( /z|я{1}/i.test(codeKey) ) CURENT_INDEX = 3;      
+        else if (/(~|\`|Ё){1}/i.test(codeKey)) CURENT_INDEX = 0;
+        select_row.selectedIndex = CURENT_INDEX;
+        if ( getCurrentKeyboard().find(key) || ctrl_shift_key.find(key)) return;     
+        if (  !event.location && event.shiftKey && !/([a-z]|[а-я])/i.test(event.key)   ) {
+            let curElement = getCurrentKeyboard().array_Btn[CURENT_INDEX][getCurrentKeyboard().array_Btn[CURENT_INDEX].length-1];
+            temp = Object.assign(curElement,curElement.cloneNode(true));  
+            getCurrentKeyboard().DrawKey(temp,true);
+            getCurrentKeyboard().array_Btn[CURENT_INDEX].pop();
+            temp.insertAdjacentHTML("afterbegin",`<b>${codeKey}</b>`);
+        }        
+        else {            
+            temp.textContent+=codeKey;
+        }      
+        temp.name +=codeKey; 
+        temp.value +=codeKey;    
+        temp[`${key}`] = codeKey;
+        getCurrentKeyboard().array_Btn[CURENT_INDEX].push( temp );
+        getCurrentKeyboard().DrawKey(temp);
+        maltyText.value = codeKey; event.preventDefault();
     }
-    else {
-        temp = btn_template.cloneNode(true);         
-        temp.textContent+=codeKey;
-    }      
-    temp.name +=codeKey; 
-    temp.value +=codeKey;    
-    temp[`${key}`] = codeKey;
-    getCurrentKeyboard().array_Btn[CURENT_INDEX].push( temp );
-    getCurrentKeyboard().DrawKey(temp);
-    maltyText.value = codeKey; event.preventDefault();
 }
 
 function clearRowKeys(){
@@ -304,7 +245,11 @@ function clearRowKeys(){
         let nav = document.querySelector(`.row${i+1}`);
         while (nav.firstChild) 
             nav.firstChild.remove();        
-    } 
+    }
+    for ( let i of ctrl_shift_key) {
+        delete i;
+    }
+    ctrl_shift_key.length =0;
     onoff_Event();    
 }
 
@@ -330,32 +275,43 @@ function handleBodyKey(event){
         console.log(event.ke,iterator_key++);
         event.preventDefault();event.stopPropagation(); event.stopImmediatePropagation();
         let key = event.key, temp;
-        if ( event.key.length===1 ) {         
+        if ( event.key.length===1 && !/space/i.test(event.code) ) {         
             if (getCurrentKeyboard().caps) key = event.key.toUpperCase();
             else key = event.key.toLowerCase();
-            key = getCurrentKey(event.key,event.shiftKey);
+            key = getCurrentKey(key,event.shiftKey);
             if (!key) return;
             maltyText.value += key; key =`key_${key}`;
+            temp = getCurrentKeyboard().find(`${key}`); 
         }       
         else {
-            if (/^space$/i.test(event.code)) {maltyText.value +=' '; key =event.code; }
-            if (/back/i.test(event.key) ) 
-                maltyText.value = maltyText.value.substring(0,maltyText.value.length-1);
-        }               
-                if ( /capslock/i.test(event.key) )                   
-                        setCapsLock_Lang();
-                if ( /shift/i.test(event.key) && event.altKey ){                
-                        setCapsLock_Lang('language');
-                 }
-                 if ( event.altKey && /shift/i.test(event.key)){
-                    setCapsLock_Lang();        
-                }
+            if (/^space$/i.test(event.code)) {maltyText.value +=' '; key ='space'; }
+            if (/back/i.test(event.key) ) maltyText.value = maltyText.value.substring(0,maltyText.value.length-1);            
+            if ( /capslock/i.test(event.key) ) 
+                setCapsLock_Lang();            
+            if ( event.altKey && /alt/i.test(event.key)) setCapsLock_Lang();
+            temp = ctrl_shift_key.find('key_'+key).key;
+        }
+        if (!temp) return;
+        if ( ! temp.classList.contains('focus')) {temp.classList.add('focus'); setTimeout(t=>{t.classList.remove('focus')},300,temp) }
+        else temp.classList.remove('focus'); 
+    break; 
+    case 'keypress':
+        if ( /shift/i.test(event.key) && event.altKey ){             
+            setCapsLock_Lang('language');
+        }
+        else if ( /shift/i.test(event.key) && (event.key ===1) ){
+            key = getCurrentKey(event.key,event.shiftKey);
+            if ( key) {
+                maltyText.value += key; key =`key_${key}`;
                 temp = getCurrentKeyboard().find(`${key}`);
                 if (!temp) return;
                 if ( ! temp.classList.contains('focus')) {temp.classList.add('focus'); setTimeout(t=>{t.classList.remove('focus')},300,temp) }
-                else temp.classList.remove('focus'); 
-            break; 
-    }    
+                else temp.classList.remove('focus');                 
+            }
+        }
+        break;
+
+    }
 }
 
 function getCurrentKey(key,shiftKey ){ let result = undefined;    
@@ -390,76 +346,74 @@ function ClickAnime(event){
         event.preventDefault(); event.stopImmediatePropagation();        
 }        
 
-//btn_template.addEventListener('mouseup',handlMouseUp);
 btn_template.addEventListener('click',ClickAnime);
 
-function getCookies(){
-    let cookies = new Map();
-    let all = document.cookies;
-    if (!all) return cookies;
-    let list = all.split('; ');
-    for ( let cookie of list){
-        if (!cookie.includes('=')) continue;
-        let p = cookie.indexOf('=');
-        let name = cookie.substring(0,p);
-        let value = JSON.parse(cookie.substring(p+1));
-        value = decodeURIComponent(value);
-        cookies.set(name,value);
-    }
-    return cookies;
+function createCtrlKey(temp,value ){ let key = 'key_'+value;
+    temp.textContent = temp.value = value;
+    temp.style.width = `${KEY_WIDTH*2}px`; order = 0;
+    if ( /TAB/i.test(value)) order = 11;
+    else if (/capslock/i.test(value)) order=21;
+    else if (/enter/i.test(value)) order=19;
+    else if ( /SHIFT/i.test(value)) {temp.style.width = `${KEY_WIDTH*2.2}px`; order=31; }
+    else if (/Control/i.test(value)) {temp.style.width = `${KEY_WIDTH*1.4}px`;order=41; }
+    else if (/alt/i.test(value)){temp.style.width = `${KEY_WIDTH*1.4}px`; order=42; }
+    else if (/arrowleft/i.test(value) ){ temp.textContent = 'left'; temp.style.width = `${KEY_WIDTH*1.4}px`; order=44; }
+    else if (/arrowup/i.test(value) ){ temp.textContent = 'up';temp.style.width = `${KEY_WIDTH*1.4}px`; order=45;}
+    else if (/arrowdown/i.test(value) ){ temp.textContent = 'down';temp.style.width = `${KEY_WIDTH*1.4}px`; order=46; }
+    else if (/arrowright/i.test(value) ){ temp.textContent = 'right';temp.style.width = `${KEY_WIDTH*1.4}px`; order =47;}
+    else if( /backspace/i.test(value)) { temp.style.width = `${KEY_WIDTH*2}px`; order=9;}
+    if (/^ $/i.test(value)) { temp.style.width = `${KEY_WIDTH*6}px`; order =43; key ='key_space' }
+    temp.name = key;    
+    ctrl_shift_key.add(temp,temp.name,order);
 }
+
 
 window.onload = function(event){
-    console.clear();
-    let cookies = getCookies();
-    if (cookies.size){
-        for ( let {key,value} of cookies ){
-            if (key === language ){ let current = null;
-                if ( (value.language === LANG_ENG) && (!value.caps ) ){
-                    current = keyEng = new KEYBOARD(value.language,false); 
-                }
-                else if ( (value.language === LANG_ENG) && (value.caps ) ){
-                    current = keyEngTab = new KEYBOARD(value.language,true); 
-                }
-                else if ((value.language === LANG_RUS) && (!value.caps ) ){
-                    current = keyRus = new KEYBOARD(value.language,false); 
-                }
-                else {
-                    current = keyRusTab = new KEYBOARD(value.language,true); 
-                }
-            }
-            else{
-
-            }                
-
-        }
-    } 
-}
-
-[keyEng,keyEngTab,keyRus,keyRusTab].forEach(el=>setCookie(1));
-
-function setCookie(daysToLive = null){
-    let cookies ='';  
-   // document.cookie= 'version=${encodeURIComponent (document.lastModified)}`
-    let cookie = `language=${JSON.stringify({language:keyEng.language,caps:keyEng.caps})}`;
-    cookies+=cookie;
-    for ( let i=0; i<5; i++){
-        for (let j=0; j<getCurrentKeyboard().array_Btn[i].length;j++){ let el = getCurrentKeyboard().array_Btn[i][j];  
-            let obj = {name:el.name,value:el.value}; 
-            Object.assign(obj,el);        
-            let value = encodeURIComponent(JSON.stringify(obj));
-            cookie = `row${i}col${j}=${value}`;
-            cookies+=cookie;
-        }
+ //   localStorage.clear();
+    let ctrl = Object.keys(localStorage).filter( el=>/^ctrlaltdel/i.test(el)  );
+    if (ctrl.length){        
+        let btn = btn_template.cloneNode(true);
+        delete ctrl_shift_key; ctrl_shift_key = new CtrlShiftKey();
+        for ( let k of ctrl ){ let temp = btn.cloneNode(true);
+            let value  = decodeURIComponent(localStorage.getItem(k));
+            createCtrlKey(temp,value );        }
+        [keyEng,keyEngTab,keyRus,keyRusTab].forEach( (element,index)=>{
+            let keylang = decodeURIComponent(localStorage.getItem((!index)?'keyEng':(index===1)?'keyEngTab':(index===2)?'keyRus':'keyRusTab'));            
+            keylang = JSON.parse(keylang); if (!keylang) return;  element.caps = index%2; 
+            for (let i=0; i<4;i++){ let row_ar = keylang[i]; row_ar.shift();
+                for (let btn of row_ar ){ element.flag = true;
+                    let temp = btn_template.cloneNode(true);
+                    for ( let key in btn){ temp[key] = btn[key] }
+                    temp.innerHTML = btn.textContent;
+                    element.array_Btn[i].push(temp);
+                }                
+            }            
+        })
+        initKeyBoard(); onoff_Event(false);
     }
-    cookies+=`;max-age=${daysToLive*60*60*24}`;
-    //document.cookie= cookies;     
-    document.cookie = "user=John; max-age=3600";
-
 }
 
-
-document.querySelector("div").addEventListener("click",handkeMouseAction);
+window.addEventListener('beforeunload', function (e){
+    localStorage.clear();    
+    for ( let obj of ctrl_shift_key ){        
+        localStorage.setItem('ctrlaltdel'+obj[0],encodeURIComponent(obj[1].key.value)); 
+    }
+    [keyEng,keyEngTab,keyRus,keyRusTab].forEach((element,index)=>{
+        if ( element.array_Btn.length ) {
+            let result = [];            
+            for (let i = 0; i<4; i ++){ let ar = [];
+                if ( element.array_Btn[i].length ){ ar.push(i);
+                    for ( let j=0; j<element.array_Btn[i].length; j++ ){ let e = element.array_Btn[i][j];                        
+                        ar.push({name:e.name,value:e.value,textContent:e.innerHTML});
+                        Object.keys(e).forEach( el=>{ ar[ar.length-1][el] = e[el]});
+                    }
+                }
+                if (ar.length) result.push(ar);                
+            }            
+            if (result.length) localStorage.setItem((!index)?'keyEng':(index===1)?'keyEngTab':(index===2)?'keyRus':'keyRusTab',encodeURIComponent(JSON.stringify(result)));
+        }
+    })
+})
 
 const handkeMouseAction = function(event){
     let k = event.target.elementFromPoint();    
@@ -467,27 +421,21 @@ const handkeMouseAction = function(event){
 
 function onoff_Event(on = true){
     if (on) {
-        maltyText.addEventListener("keypress", handleCreateKeys);
-        maltyText.addEventListener("keyup",handleCreateShiftCtrl);
-        
+        maltyText.addEventListener("keydown", handleCreateKeys);
+      //  maltyText.addEventListener("keypress",handleCreateShiftCtrl);        
         BTN_Init.addEventListener("click",initKeyBoard);
-
         document.body.removeEventListener("keydown",handleBodyKey);    
         document.body.removeEventListener("keypress",handleBodyKey); 
         document.body.removeEventListener("keyup",handleBodyKey);
-
     }
     else{
-        maltyText.removeEventListener("keyup",handleCreateShiftCtrl);
-        maltyText.removeEventListener("keypress", handleCreateKeys);    
-        
-        BTN_Init.removeEventListener("click",initKeyBoard);
-        
+    //    maltyText.removeEventListener("keypress",handleCreateShiftCtrl);
+        maltyText.removeEventListener("keydown", handleCreateKeys);            
+        BTN_Init.removeEventListener("click",initKeyBoard);        
         document.body.addEventListener("keydown",handleBodyKey);    
         document.body.addEventListener("keypress",handleBodyKey);
         document.body.addEventListener("keyup",handleBodyKey);    
     }
 }
-
 
 
