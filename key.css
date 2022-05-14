@@ -6,8 +6,13 @@ body {
 
 body div {
   margin: 10px 20px;
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  flex-flow: column nowrap;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-flow: column nowrap;
+          flex-flow: column nowrap;
   gap: 10px;
   border: 1px solid darkgrey;
   width: 680px;
@@ -15,19 +20,32 @@ body div {
 }
 
 body div nav {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  flex-flow: row nowrap;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-flow: row nowrap;
+          flex-flow: row nowrap;
   gap: 5px;
-  justify-content: space-around;
-  align-items: center;
+  -ms-flex-pack: distribute;
+      justify-content: space-around;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
 }
 
 body textarea {
   width: 680px;
-  height: 400px;
+  height: 320px;
   margin: 10px 20px;
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  flex-flow: row nowrap;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-flow: row nowrap;
+          flex-flow: row nowrap;
   border: 1px dotted #cccccc;
   color: red;
   font-size: 1.8em;
@@ -39,7 +57,8 @@ body select {
   font-weight: 600;
   color: red;
   border-radius: 5px;
-  box-shadow: 0 0 2px white;
+  -webkit-box-shadow: 0 0 2px white;
+          box-shadow: 0 0 2px white;
 }
 
 body input [type="radio"]:checked {
@@ -48,10 +67,19 @@ body input [type="radio"]:checked {
 }
 
 button {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  flex-flow: row nowrap;
-  align-items: center;
-  justify-content: center;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-flow: row nowrap;
+          flex-flow: row nowrap;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
   gap: 2px;
   width: 40px;
   height: 40px;
@@ -59,13 +87,20 @@ button {
   font-size: 1em;
   color: black;
   background: #006699;
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(40%, rgba(255, 255, 255, 0.1)), to(rgba(255, 255, 255, 0.5)));
   background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 40%, rgba(255, 255, 255, 0.5));
   border: none;
   border-radius: 5px;
-  box-shadow: 0 0 2px white;
+  -webkit-box-shadow: 0 0 2px white;
+          box-shadow: 0 0 2px white;
+  -webkit-transition-property: background, -webkit-box-shadow, -webkit-transform;
+  transition-property: background, -webkit-box-shadow, -webkit-transform;
   transition-property: box-shadow, background, transform;
-  transition-timing-function: ease-in-out;
-  transition-duration: .5s;
+  transition-property: box-shadow, background, transform, -webkit-box-shadow, -webkit-transform;
+  -webkit-transition-timing-function: ease-in-out;
+          transition-timing-function: ease-in-out;
+  -webkit-transition-duration: .5s;
+          transition-duration: .5s;
 }
 
 button b {
@@ -73,8 +108,13 @@ button b {
 }
 
 article {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  flex-flow: row nowrap;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-flow: row nowrap;
+          flex-flow: row nowrap;
   width: 680px;
   gap: 40px;
   margin-left: 20px;
@@ -85,11 +125,56 @@ article .init {
 }
 
 .focus {
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(40%, rgba(0, 102, 153, 0.5)), to(rgba(255, 255, 255, 0.5)));
   background: linear-gradient(to bottom, rgba(0, 102, 153, 0.5) 40%, rgba(255, 255, 255, 0.5));
-  box-shadow: inset 4px 4px rgba(10, 10, 10, 0.1);
-  transform: scale(1.5);
+  -webkit-box-shadow: inset 4px 4px rgba(10, 10, 10, 0.1);
+          box-shadow: inset 4px 4px rgba(10, 10, 10, 0.1);
+  -webkit-transform: scale(1.5);
+          transform: scale(1.5);
 }
 
 h2, p {
   margin: 15px 25px;
 }
+
+footer {
+  color: #0c066c;
+  height: 250px;
+  text-shadow: 1px -1px 1px #65747e;
+  display: inline-flexbox;
+  position: static;
+  background: #006699;
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(40%, rgba(255, 255, 255, 0.1)), to(rgba(255, 255, 255, 0.5)));
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 40%, rgba(255, 255, 255, 0.5));
+  margin-left: 20px;
+}
+
+footer ul li {
+  list-style: none;
+  background-image: url(./images/bullet.png);
+  background-repeat: no-repeat;
+  padding-left: 30px;
+  margin-bottom: 10px;
+  background-position: 10px 4px;
+  margin-left: 35px;
+  margin-right: 60px;
+}
+
+footer ul li a {
+  text-decoration: none;
+  color: #0c066c;
+}
+
+footer ul li a :link {
+  color: #0c066c;
+}
+
+footer ul li a :visited {
+  color: #0c066c;
+}
+
+footer ul li a :hover {
+  color: #0c066c;
+  text-shadow: 1px -1px 1px #65747e;
+}
+/*# sourceMappingURL=key.css.map */
