@@ -39,11 +39,10 @@ class KEYBOARD {
     getRowCol(key){ let row =-1, col =-1;
         for (let i = 0; i<5; i ++){
             for ( let j=0; j<this.array_Btn[i].length; j++ ){
-                if ( this.array_Btn[i][j].name === key.name) { row =i; col = j; break; }
-            }
-            if ( row>=0) break;
+                if ( this.array_Btn[i][j].name.includes(key)) return {row:i,col:j}
+            }            
         }
-        return {row,col};
+        return undefined;
     }
 }
 
@@ -284,22 +283,24 @@ function handleBodyKey(event){  let key = event.key, temp;
         case "keydown":         
         //event.preventDefault();
         event.stopPropagation(); event.stopImmediatePropagation();        
-        if ( event.key.length===1 && !/space/i.test(event.code) ) {         
-            if (getCurrentKeyboard().caps) key = event.key.toUpperCase();
-            else key = event.key.toLowerCase();
-            key = getCurrentKey(key,event.shiftKey);
-            if (!key) return;
-            maltyText.value += key; key =`key_${key}`;
-            temp = getCurrentKeyboard().find(`${key}`); 
+        if ( event.key.length===1 && !/^space/i.test(event.code) ) {         
+            let res = [keyEng,keyEngTab,keyRus,keyRusTab].filter(  array=>{return array.getRowCol(event.key)}); 
+            if (res.length){ 
+                res = res[0].getRowCol(event.key);
+                temp = getCurrentKeyboard().array_Btn[res.row][res.col];
+                if (!temp) return;
+                maltyText.value += temp.value.length===2?event.key:temp.value; 
+
+            }
         }       
         else {
-            if (/^space$/i.test(event.code)) {maltyText.value +=' '; key ='space'; }
+            if (/^space/i.test(event.code)) {maltyText.value +=' '; key ='space'; }
             if (/back/i.test(event.key) ) maltyText.value = maltyText.value.substring(0,maltyText.value.length-1);            
             if ( /capslock/i.test(event.key) ) 
                 setCapsLock_Lang();            
             if (/shift/i.test(event.key) && ( event.altKey) ) setCapsLock_Lang('language');
             temp = ctrl_shift_key.find('key_'+key).key;
-            if (event.shiftKey &&  /([a-z]|[а-я]){1,1}/i.test(event.key)){
+            if (event.shiftKey &&  !/[a-z]{2}|[а-я]{2}/i.test(event.key)){
                 reverseKeyBoard(); maltyText.value += event.key; key =`key_${event.key}`;
                 temp = getCurrentKeyboard().find(`${key}`); 
             }
@@ -314,7 +315,7 @@ function handleBodyKey(event){  let key = event.key, temp;
 function getCurrentKey(key,shiftKey ){ let result = undefined;    
     for ( let temp of [keyEng,keyEngTab,keyRus,keyRusTab ]){
         let simb = temp.find('key_'+key);
-        if ( simb ) { let {row, col} = temp.getRowCol(simb);
+        if ( simb ) { let {row, col} = temp.getRowCol(simb.name);
             if ( getCurrentKeyboard() !== temp ) { result = getCurrentKeyboard().array_Btn[row][col].value; 
                 if (result.length ==2) {
                     result = shiftKey?v[1]:v[0];
