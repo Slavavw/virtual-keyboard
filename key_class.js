@@ -1,5 +1,5 @@
 
-//import  * as constant from "constant.js";
+//import  KEYBOARD from "./keyboardCLS";
 //import BinarySearchTree from "binaryTreeSearch.js";
 
 class KEYBOARD {
@@ -241,9 +241,9 @@ function clearRowKeys(){
         while (nav.firstChild) 
             nav.firstChild.remove();        
     }
-    for ( let i of ctrl_shift_key) {
+   /* for ( let i of ctrl_shift_key) {
         delete i;
-    }
+    }*/
     ctrl_shift_key.length =0;
     onoff_Event();    
 }
@@ -290,7 +290,6 @@ function handleBodyKey(event){  let key = event.key, temp;
                 temp = getCurrentKeyboard().array_Btn[res.row][res.col];
                 if (!temp) return;
                 maltyText.value += temp.value.length===2?event.key:temp.value; 
-
             }
         }       
         else {
@@ -298,17 +297,24 @@ function handleBodyKey(event){  let key = event.key, temp;
             if (/back/i.test(event.key) ) maltyText.value = maltyText.value.substring(0,maltyText.value.length-1);            
             if ( /capslock/i.test(event.key) ) 
                 setCapsLock_Lang();            
-            if (/shift/i.test(event.key) && ( event.altKey) ) setCapsLock_Lang('language');
-            temp = ctrl_shift_key.find('key_'+key).key;
-            if (event.shiftKey &&  !/[a-z]{2}|[а-я]{2}/i.test(event.key)){
-                reverseKeyBoard(); maltyText.value += event.key; key =`key_${event.key}`;
-                temp = getCurrentKeyboard().find(`${key}`); 
-            }
+            if (/shift/i.test(event.key) && ( event.altKey) ) setCapsLock_Lang('language');            
+            temp = ctrl_shift_key.find('key_'+key).key;            
         }
         if (!temp) return;
-        if ( ! temp.classList.contains('focus')) {temp.classList.add('focus'); setTimeout(t=>{t.classList.remove('focus')},300,temp) }
-        else temp.classList.remove('focus'); 
-    break;        
+        if ( ! temp.classList.contains('focus')) {
+            event.target.removeEventListener('keydown',handleBodyKey);        
+            temp.classList.add('focus'); setTimeout(t=>{t.classList.remove('focus');event.target.addEventListener("keydown",handleBodyKey); },300,temp) 
+        }
+        else {temp.classList.remove('focus'); event.target.addEventListener("keydown",handleBodyKey); }
+    break;
+    case "keypress":
+        if (event.shiftKey) 
+                if (!/[a-z]{2}|[а-я]{2}/i.test(event.key)){
+                    reverseKeyBoard(); maltyText.value += event.key; key =`key_${event.key}`;
+                    temp = getCurrentKeyboard().find(`${key}`); 
+                    reverseKeyBoard();
+                }
+        break;
     }
 }
 
@@ -367,15 +373,16 @@ function createCtrlKey(temp,value ){ let key = 'key_'+value;
 
 window.onload = function(event){
  //   localStorage.clear();
-    let ctrl = Object.keys(localStorage).filter( el=>/^ctrlaltdel/i.test(el)  );
+    let ctrl = SObject.keys(localStorage).filter( el=>/^ctrlaltdel/i.test(el)  );
     if (ctrl.length){        
         let btn = btn_template.cloneNode(true);
-        delete ctrl_shift_key; ctrl_shift_key = new CtrlShiftKey();
+       // delete ctrl_shift_key; 
+        ctrl_shift_key = new CtrlShiftKey();
         for ( let k of ctrl ){ let temp = btn.cloneNode(true);
             let value  = decodeURIComponent(localStorage.getItem(k));
             createCtrlKey(temp,value );        }
         [keyEng,keyEngTab,keyRus,keyRusTab].forEach( (element,index)=>{
-            let keylang = decodeURIComponent(localStorage.getItem((!index)?'keyEng':(index===1)?'keyEngTab':(index===2)?'keyRus':'keyRusTab'));            
+            let keylang = decodeURIComponent(localStorage.getItem((!index)?'keyEng':(index===1)?'keyEngTab':(index===2)?'keyRus':'keyRusTab'));
             keylang = JSON.parse(keylang); if (!keylang) return;  element.caps = index%2; 
             for (let i=0; i<4;i++){ let row_ar = keylang[i]; row_ar.shift();
                 for (let btn of row_ar ){ element.flag = true;
@@ -417,16 +424,16 @@ function onoff_Event(on = true){
         maltyText.addEventListener("keydown", handleCreateKeys);
       //  maltyText.addEventListener("keypress",handleCreateShiftCtrl);        
         BTN_Init.addEventListener("click",initKeyBoard);
-        document.body.removeEventListener("keydown",handleBodyKey);    
-        document.body.removeEventListener("keypress",handleBodyKey); 
+        document.body.removeEventListener("keydown",handleBodyKey); 
+        document.body.removeEventListener("keypress",handleBodyKey);  
         div_keyboard.removeEventListener('click',handleMouseAction);
     }
     else{
     //    maltyText.removeEventListener("keypress",handleCreateShiftCtrl);
         maltyText.removeEventListener("keydown", handleCreateKeys);            
         BTN_Init.removeEventListener("click",initKeyBoard);        
-        document.body.addEventListener("keydown",handleBodyKey);    
-        document.body.addEventListener("keypress",handleBodyKey);
+        document.body.addEventListener("keydown",handleBodyKey);      
+        document.body.addEventListener("keypress",handleBodyKey);        
         div_keyboard.addEventListener('click',handleMouseAction);
 
     }
@@ -455,5 +462,4 @@ function handleMouseAction(event){
         });
         event.preventDefault(); event.stopImmediatePropagation(); 
 }
-
 
